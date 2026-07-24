@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sunset-gold: #D4A574;
+  --color-sunset-gold-light: #E8C9A0;
+  --color-sakura-pink: #E8A0BF;
+  --color-sakura-pink-light: #F5D0E3;
+  --color-vine-green: #7ECE7E;
+  --color-vine-green-glow: #A8E6A8;
+  --color-twilight: #2D1B3D;
+  --color-twilight-deep: #1A0F26;
+  --color-cream: #FFF8F0;
+  --color-cream-warm: #FFF0E0;
+  --color-lake-shadow: #1A1A2E;
+  --color-lake-deep: #0F0F1A;
+
+  --font-serif: "Cormorant Garamond", "Georgia", serif;
+  --font-display: "Trajan Pro", "Cormorant Garamond", serif;
+  --font-body: "Cormorant Garamond", "Georgia", serif;
+}
+
+@font-face {
+  font-family: "Trajan Pro";
+  src: url("/fonts/TrajanPro-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Trajan Pro";
+  src: url("/fonts/TrajanPro-Bold.otf") format("opentype");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("/fonts/CormorantGaramond/static/CormorantGaramond-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("/fonts/CormorantGaramond/static/CormorantGaramond-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("/fonts/CormorantGaramond/static/CormorantGaramond-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("/fonts/CormorantGaramond/static/CormorantGaramond-Bold.ttf") format("truetype");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-lake-deep);
+  color: var(--color-cream);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  -webkit-user-drag: none;
+}
+
+::selection {
+  background-color: var(--color-sakura-pink);
+  color: var(--color-twilight-deep);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-lake-deep);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-sunset-gold);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-sakura-pink);
+}
