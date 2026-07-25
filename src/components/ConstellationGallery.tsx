@@ -189,8 +189,8 @@ export default function ConstellationGallery() {
               ctx.moveTo(sorted[i].x + ox, sorted[i].y + oy);
               ctx.lineTo(sorted[j].x + ox, sorted[j].y + oy);
               ctx.strokeStyle = COLOR_MAP[sorted[i].color] || COLOR_MAP.celebration;
-              ctx.globalAlpha = 0.08;
-              ctx.lineWidth = 0.5;
+              ctx.globalAlpha = 0.25;
+              ctx.lineWidth = 1;
               ctx.stroke();
             }
           }
@@ -259,9 +259,23 @@ export default function ConstellationGallery() {
     dragRef.current.offsetY = dy;
   }, []);
 
-  const handlePointerUp = useCallback(() => {
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    const wasDragging = dragRef.current.moved;
     dragRef.current.isDragging = false;
-  }, []);
+
+    if (!wasDragging) {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left - dragRef.current.offsetX;
+      const my = e.clientY - rect.top - dragRef.current.offsetY;
+
+      const hit = stars.find(
+        (s) => Math.hypot(s.x - mx, s.y - my) < s.radius + 16
+      );
+      if (hit) setSelectedStar(hit);
+    }
+  }, [stars]);
 
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
