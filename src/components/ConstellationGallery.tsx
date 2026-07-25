@@ -464,6 +464,43 @@ export default function ConstellationGallery() {
                 className="relative bg-gradient-to-br from-[#1a1a3e] to-[#0a0a1a] border border-white/15 rounded-xl p-6 sm:p-8 max-w-sm w-full shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               >
+                <button
+                  onClick={() => setSelectedStar(null)}
+                  className="absolute top-3 right-4 text-cream/30 hover:text-cream/60 transition-colors text-lg"
+                >
+                  ×
+                </button>
+
+                {/* Prev/Next arrows */}
+                {stars.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => {
+                        const idx = stars.findIndex((s) => s.id === selectedStar.id);
+                        const prev = (idx - 1 + stars.length) % stars.length;
+                        setSelectedStar(stars[prev]);
+                      }}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-colors"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cream/60">
+                        <path d="M15 18l-6-6 6-6" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => {
+                        const idx = stars.findIndex((s) => s.id === selectedStar.id);
+                        const next = (idx + 1) % stars.length;
+                        setSelectedStar(stars[next]);
+                      }}
+                      className="absolute right-10 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-colors"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cream/60">
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    </button>
+                  </>
+                )}
+
                 <div
                   className="w-10 h-10 rounded-full mx-auto mb-4"
                   style={{
@@ -485,12 +522,10 @@ export default function ConstellationGallery() {
                 >
                   {COLOR_LABELS[selectedStar.color] || "Wish"}
                 </p>
-                <button
-                  onClick={() => setSelectedStar(null)}
-                  className="absolute top-3 right-4 text-cream/30 hover:text-cream/60 transition-colors text-lg"
-                >
-                  ×
-                </button>
+                {/* Star counter */}
+                <p className="font-serif text-cream/30 text-xs text-center mt-3">
+                  {stars.findIndex((s) => s.id === selectedStar.id) + 1} / {stars.length}
+                </p>
               </motion.div>
             </motion.div>
           )}

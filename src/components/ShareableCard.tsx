@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { useRef, useCallback, useState } from "react";
 
 const ARTIFACT_NUMBER = "VES-852G-CR47";
@@ -111,11 +111,15 @@ export default function ShareableCard() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [copied, setCopied] = useState(false);
   const [copiedPlatform, setCopiedPlatform] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
-  const generateCard = useCallback(() => {
+  const generateCard = useCallback(async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d")!;
+
+    // Wait for fonts to be ready before drawing
+    await document.fonts.ready;
 
     const w = 1200;
     const h = 630;
@@ -365,7 +369,11 @@ export default function ShareableCard() {
         "Happy Birthday Smiscee! A magical keepsake from the realm of Vestia: https://smisceebday.vercel.app";
       await navigator.clipboard.writeText(text);
       setCopiedPlatform(platform);
-      setTimeout(() => setCopiedPlatform(null), 2000);
+      setToast(`Link copied! Paste it in your ${platform} post.`);
+      setTimeout(() => {
+        setCopiedPlatform(null);
+        setToast(null);
+      }, 3000);
     },
     [],
   );
@@ -373,7 +381,11 @@ export default function ShareableCard() {
   const copyLink = useCallback(() => {
     navigator.clipboard.writeText("https://smisceebday.vercel.app");
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setToast("Link copied to clipboard!");
+    setTimeout(() => {
+      setCopied(false);
+      setToast(null);
+    }, 3000);
   }, []);
 
   return (
@@ -569,6 +581,20 @@ export default function ShareableCard() {
           {copiedPlatform === "youtube" ? "Copied!" : "Share on YouTube"}
         </motion.button>
       </div>
+
+      {/* Toast notification */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-[#1a1a3e] to-[#0a0a1a] border border-sunset-gold/30 rounded-lg px-5 py-3 shadow-2xl"
+          >
+            <p className="font-serif text-cream text-sm">{toast}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
