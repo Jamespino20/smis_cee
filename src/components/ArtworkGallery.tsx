@@ -3,7 +3,7 @@
 import { motion, useInView } from "motion/react";
 import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
-import { upload } from "@vercel/blob/client";
+import { put } from "@vercel/blob/client";
 
 interface Artwork {
   id: string;
@@ -77,11 +77,24 @@ export default function ArtworkGallery() {
 
     try {
       const ext = file.name.split(".").pop() || "jpg";
-      const filename = `artworks/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const pathname = `artworks/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
-      const blob = await upload(filename, file, {
+      const tokenRes = await fetch("/api/artworks/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pathname }),
+      });
+
+      if (!tokenRes.ok) {
+        const tokenData = await tokenRes.json();
+        throw new Error(tokenData.error || "Failed to get upload token");
+      }
+
+      const { clientToken } = await tokenRes.json();
+
+      const blob = await put(pathname, file, {
         access: "public",
-        handleUploadUrl: "/api/artworks/upload",
+        token: clientToken,
       });
 
       const res = await fetch("/api/artworks", {
@@ -112,8 +125,9 @@ export default function ArtworkGallery() {
         const data = await res.json();
         setError(data.error || "Failed to save artwork");
       }
-    } catch {
-      setError("Failed to upload artwork");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to upload artwork";
+      setError(msg);
     } finally {
       setSubmitting(false);
     }
