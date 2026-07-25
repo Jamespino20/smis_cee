@@ -118,7 +118,16 @@ export default function ShareableCard() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d")!;
 
-    // Wait for fonts to be ready before drawing
+    // Explicitly load fonts for canvas rendering
+    await Promise.all([
+      document.fonts.load("500 20px 'Cormorant Garamond'"),
+      document.fonts.load("bold 72px 'Cormorant Garamond'"),
+      document.fonts.load("16px 'Cormorant Garamond'"),
+      document.fonts.load("italic 17px 'Cormorant Garamond'"),
+      document.fonts.load("12px 'Cormorant Garamond'"),
+      document.fonts.load("13px 'Cormorant Garamond'"),
+      document.fonts.load("bold 72px Georgia"),
+    ]);
     await document.fonts.ready;
 
     const w = 1200;
@@ -245,19 +254,20 @@ export default function ShareableCard() {
 
     function drawTextContent() {
       const textX = 420;
+      const serif = "'Cormorant Garamond', Georgia, serif";
 
       // "Happy Birthday" header
       ctx.save();
       ctx.fillStyle = "#3d2b1f";
       ctx.globalAlpha = 0.5;
-      ctx.font = "500 20px Georgia, serif";
+      ctx.font = `500 20px ${serif}`;
       ctx.textAlign = "left";
       ctx.fillText("HAPPY BIRTHDAY", textX, 140);
       ctx.restore();
 
       // "Smiscee" in display font
       ctx.fillStyle = "#3d2b1f";
-      ctx.font = "bold 72px Georgia, serif";
+      ctx.font = `bold 72px ${serif}`;
       ctx.textAlign = "left";
       ctx.fillText("Smiscee", textX, 230);
 
@@ -275,7 +285,7 @@ export default function ShareableCard() {
       // Date
       ctx.save();
       ctx.fillStyle = "#c9a96e";
-      ctx.font = "16px Georgia, serif";
+      ctx.font = `16px ${serif}`;
       ctx.textAlign = "left";
       ctx.fillText("July 26, 2026", textX, 285);
       ctx.restore();
@@ -284,9 +294,9 @@ export default function ShareableCard() {
       ctx.save();
       ctx.fillStyle = "#3d2b1f";
       ctx.globalAlpha = 0.7;
-      ctx.font = "italic 17px Georgia, serif";
+      ctx.font = `italic 17px ${serif}`;
       ctx.textAlign = "left";
-      const msg = "From the realm of Vestia, with love —";
+      const msg = "From the realm of Vestia, with love \u2014";
       ctx.fillText(msg, textX, 340);
       const msg2 = "a keepsake for the creator of worlds.";
       ctx.fillText(msg2, textX, 365);
@@ -296,7 +306,7 @@ export default function ShareableCard() {
       ctx.save();
       ctx.fillStyle = "#c9a96e";
       ctx.globalAlpha = 0.6;
-      ctx.font = "12px Georgia, serif";
+      ctx.font = `12px ${serif}`;
       ctx.textAlign = "left";
       ctx.fillText("A VESTIAN ARTIFACT", textX, 420);
       ctx.restore();
@@ -317,7 +327,7 @@ export default function ShareableCard() {
       ctx.save();
       ctx.fillStyle = "#3d2b1f";
       ctx.globalAlpha = 0.3;
-      ctx.font = "13px Georgia, serif";
+      ctx.font = `13px ${serif}`;
       ctx.textAlign = "center";
       ctx.fillText("smisceebday.vercel.app", w / 2, h - 45);
       ctx.restore();

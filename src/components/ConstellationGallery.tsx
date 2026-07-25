@@ -269,7 +269,7 @@ export default function ConstellationGallery() {
     if (!dragRef.current.isDragging) return;
     const dx = e.clientX - dragRef.current.startX;
     const dy = e.clientY - dragRef.current.startY;
-    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
       dragRef.current.moved = true;
     }
     dragRef.current.offsetX = dx;
@@ -288,7 +288,7 @@ export default function ConstellationGallery() {
       const my = e.clientY - rect.top - dragRef.current.offsetY;
 
       const hit = stars.find(
-        (s) => Math.hypot(s.x - mx, s.y - my) < s.radius + 16
+        (s) => Math.hypot(s.x - mx, s.y - my) < s.radius + 24
       );
       if (hit) setSelectedStar(hit);
     }
@@ -304,7 +304,7 @@ export default function ConstellationGallery() {
       const my = e.clientY - rect.top - dragRef.current.offsetY;
 
       const hit = stars.find(
-        (s) => Math.hypot(s.x - mx, s.y - my) < s.radius + 12
+        (s) => Math.hypot(s.x - mx, s.y - my) < s.radius + 24
       );
       if (hit) setSelectedStar(hit);
     },
@@ -466,40 +466,10 @@ export default function ConstellationGallery() {
               >
                 <button
                   onClick={() => setSelectedStar(null)}
-                  className="absolute top-3 right-4 text-cream/30 hover:text-cream/60 transition-colors text-lg"
+                  className="absolute top-3 right-4 text-cream/30 hover:text-cream/60 transition-colors text-lg z-10"
                 >
                   ×
                 </button>
-
-                {/* Prev/Next arrows */}
-                {stars.length > 1 && (
-                  <>
-                    <button
-                      onClick={() => {
-                        const idx = stars.findIndex((s) => s.id === selectedStar.id);
-                        const prev = (idx - 1 + stars.length) % stars.length;
-                        setSelectedStar(stars[prev]);
-                      }}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-colors"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cream/60">
-                        <path d="M15 18l-6-6 6-6" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => {
-                        const idx = stars.findIndex((s) => s.id === selectedStar.id);
-                        const next = (idx + 1) % stars.length;
-                        setSelectedStar(stars[next]);
-                      }}
-                      className="absolute right-10 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-colors"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cream/60">
-                        <path d="M9 18l6-6-6-6" />
-                      </svg>
-                    </button>
-                  </>
-                )}
 
                 <div
                   className="w-10 h-10 rounded-full mx-auto mb-4"
@@ -522,10 +492,41 @@ export default function ConstellationGallery() {
                 >
                   {COLOR_LABELS[selectedStar.color] || "Wish"}
                 </p>
-                {/* Star counter */}
-                <p className="font-serif text-cream/30 text-xs text-center mt-3">
-                  {stars.findIndex((s) => s.id === selectedStar.id) + 1} / {stars.length}
-                </p>
+
+                {/* Navigation bar */}
+                {stars.length > 1 && (
+                  <div className="flex items-center justify-between mt-5 pt-4 border-t border-white/10">
+                    <button
+                      onClick={() => {
+                        const idx = stars.findIndex((s) => s.id === selectedStar.id);
+                        const prev = (idx - 1 + stars.length) % stars.length;
+                        setSelectedStar(stars[prev]);
+                      }}
+                      className="flex items-center gap-1 text-cream/40 hover:text-cream/70 transition-colors text-xs font-serif"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M15 18l-6-6 6-6" />
+                      </svg>
+                      Prev
+                    </button>
+                    <span className="font-serif text-cream/30 text-xs">
+                      {stars.findIndex((s) => s.id === selectedStar.id) + 1} / {stars.length}
+                    </span>
+                    <button
+                      onClick={() => {
+                        const idx = stars.findIndex((s) => s.id === selectedStar.id);
+                        const next = (idx + 1) % stars.length;
+                        setSelectedStar(stars[next]);
+                      }}
+                      className="flex items-center gap-1 text-cream/40 hover:text-cream/70 transition-colors text-xs font-serif"
+                    >
+                      Next
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
               </motion.div>
             </motion.div>
           )}
