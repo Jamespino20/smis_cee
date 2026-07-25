@@ -217,19 +217,19 @@ export default function RebirthCore({
 
       {/* Crack lines */}
       {phase === "cracked" && (
-        <svg className="absolute inset-0 w-full h-full z-10 pointer-events-none">
+        <svg className="absolute inset-0 w-full h-full z-10 pointer-events-none" viewBox="0 0 100 100">
           {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => {
             const rad = (angle * Math.PI) / 180;
-            const len = 120 + i * 15;
+            const len = 12 + i * 1.5;
             return (
               <motion.line
                 key={angle}
-                x1="50%"
-                y1="50%"
-                x2={`${50 + (Math.cos(rad) * len) / 4}%`}
-                y2={`${50 + (Math.sin(rad) * len) / 4}%`}
+                x1="50"
+                y1="50"
+                x2={50 + Math.cos(rad) * len}
+                y2={50 + Math.sin(rad) * len}
                 stroke={COLORS.gold}
-                strokeWidth="1.5"
+                strokeWidth="0.15"
                 strokeLinecap="round"
                 initial={{ pathLength: 0, opacity: 0 }}
                 animate={{ pathLength: 1, opacity: [0, 0.8, 0.3] }}

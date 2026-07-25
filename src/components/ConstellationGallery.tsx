@@ -119,6 +119,7 @@ export default function ConstellationGallery() {
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [canvasSize, setCanvasSize] = useState({ w: 800, h: 500 });
+  const starDataKey = stars.length > 0 ? stars[0].id : null;
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
@@ -141,6 +142,8 @@ export default function ConstellationGallery() {
   }, []);
 
   useEffect(() => {
+    if (!stars.length) return;
+
     const canvas = canvasRef.current;
     if (!canvas || isMobile) return;
 
@@ -158,8 +161,7 @@ export default function ConstellationGallery() {
 
     const positioned = positionStars(stars, w, h);
     setStars(positioned);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stars.length, isMobile]);
+  }, [starDataKey, isMobile]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
