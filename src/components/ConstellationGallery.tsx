@@ -118,6 +118,7 @@ export default function ConstellationGallery() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [canvasSize, setCanvasSize] = useState({ w: 800, h: 500 });
+  const [mobileStarIndex, setMobileStarIndex] = useState<number | null>(null);
   const starDataKey = stars.length > 0 ? stars[0].id : null;
   const dragRef = useRef({ isDragging: false, startX: 0, startY: 0, offsetX: 0, offsetY: 0, moved: false });
 
@@ -198,14 +199,30 @@ export default function ConstellationGallery() {
         ctx.globalAlpha = 1;
       }
 
-      stars.forEach((star) => {
+      stars.forEach((star, idx) => {
         const colorHex = COLOR_MAP[star.color] || COLOR_MAP.celebration;
         const twinkle = 0.5 + 0.5 * Math.sin((frame + star.twinkleDelay * 60) * 0.04);
         const glowSize = star.radius * 3;
         const sx = star.x + ox;
         const sy = star.y + oy;
+        const isHighlighted = mobileStarIndex === idx;
 
         ctx.save();
+
+        if (isHighlighted) {
+          ctx.globalAlpha = 0.4 * twinkle;
+          ctx.beginPath();
+          ctx.arc(sx, sy, glowSize * 1.8, 0, Math.PI * 2);
+          ctx.fillStyle = colorHex;
+          ctx.fill();
+
+          ctx.globalAlpha = 0.6 * twinkle;
+          ctx.beginPath();
+          ctx.arc(sx, sy, star.radius * 3, 0, Math.PI * 2);
+          ctx.fillStyle = colorHex;
+          ctx.fill();
+        }
+
         ctx.globalAlpha = 0.15 * twinkle;
         ctx.beginPath();
         ctx.arc(sx, sy, glowSize, 0, Math.PI * 2);
@@ -238,7 +255,7 @@ export default function ConstellationGallery() {
 
     draw();
     return () => cancelAnimationFrame(animId);
-  }, [stars, canvasSize]);
+  }, [stars, canvasSize, mobileStarIndex]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     dragRef.current.startX = e.clientX - dragRef.current.offsetX;
@@ -371,6 +388,62 @@ export default function ConstellationGallery() {
             onPointerCancel={handlePointerUp}
           />
         </div>
+
+        {/* Mobile star cycle */}
+        {stars.length > 0 && (
+          <div className="flex items-center justify-center gap-3 mb-6 sm:hidden">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                const prev = mobileStarIndex !== null ? (mobileStarIndex - 1 + stars.length) % stars.length : stars.length - 1;
+                setMobileStarIndex(prev);
+                setSelectedStar(stars[prev]);
+              }}
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-colors"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cream">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </motion.button>
+
+            <div className="flex items-center gap-2">
+              {stars.map((star, i) => (
+                <button
+                  key={star.id}
+                  onClick={() => {
+                    setMobileStarIndex(i);
+                    setSelectedStar(star);
+                  }}
+                  className="w-2 h-2 rounded-full transition-all"
+                  style={{
+                    backgroundColor: mobileStarIndex === i
+                      ? COLOR_MAP[star.color] || COLOR_MAP.celebration
+                      : "rgba(255,255,255,0.3)",
+                    boxShadow: mobileStarIndex === i
+                      ? `0 0 8px ${COLOR_MAP[star.color] || COLOR_MAP.celebration}`
+                      : "none",
+                  }}
+                />
+              ))}
+            </div>
+
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                const next = mobileStarIndex !== null ? (mobileStarIndex + 1) % stars.length : 0;
+                setMobileStarIndex(next);
+                setSelectedStar(stars[next]);
+              }}
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-colors"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cream">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </motion.button>
+          </div>
+        )}
 
         {/* Star popup */}
         <AnimatePresence>
