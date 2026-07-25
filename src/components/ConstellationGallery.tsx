@@ -120,6 +120,7 @@ export default function ConstellationGallery() {
   const [isMobile, setIsMobile] = useState(false);
   const [canvasSize, setCanvasSize] = useState({ w: 800, h: 500 });
   const starDataKey = stars.length > 0 ? stars[0].id : null;
+  const dragRef = useRef({ isDragging: false, startX: 0, startY: 0, offsetX: 0, offsetY: 0, moved: false });
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
@@ -178,33 +179,62 @@ export default function ConstellationGallery() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, canvasSize.w, canvasSize.h);
 
+      const ox = dragRef.current.offsetX;
+      const oy = dragRef.current.offsetY;
+
+      // Draw constellation lines between same-color nearby stars
+      if (stars.length > 1) {
+        const sorted = [...stars].sort((a, b) => a.y - b.y);
+        for (let i = 0; i < sorted.length - 1; i++) {
+          for (let j = i + 1; j < sorted.length; j++) {
+            if (sorted[i].color !== sorted[j].color) continue;
+            const dist = Math.hypot(
+              sorted[i].x - sorted[j].x,
+              sorted[i].y - sorted[j].y
+            );
+            if (dist < 180) {
+              ctx.beginPath();
+              ctx.moveTo(sorted[i].x + ox, sorted[i].y + oy);
+              ctx.lineTo(sorted[j].x + ox, sorted[j].y + oy);
+              ctx.strokeStyle = COLOR_MAP[sorted[i].color] || COLOR_MAP.celebration;
+              ctx.globalAlpha = 0.08;
+              ctx.lineWidth = 0.5;
+              ctx.stroke();
+            }
+          }
+        }
+        ctx.globalAlpha = 1;
+      }
+
       stars.forEach((star) => {
         const colorHex = COLOR_MAP[star.color] || COLOR_MAP.celebration;
         const twinkle = 0.5 + 0.5 * Math.sin((frame + star.twinkleDelay * 60) * 0.04);
         const glowSize = star.radius * 3;
+        const sx = star.x + ox;
+        const sy = star.y + oy;
 
         ctx.save();
         ctx.globalAlpha = 0.15 * twinkle;
         ctx.beginPath();
-        ctx.arc(star.x, star.y, glowSize, 0, Math.PI * 2);
+        ctx.arc(sx, sy, glowSize, 0, Math.PI * 2);
         ctx.fillStyle = colorHex;
         ctx.fill();
 
         ctx.globalAlpha = 0.3 * twinkle;
         ctx.beginPath();
-        ctx.arc(star.x, star.y, star.radius * 1.8, 0, Math.PI * 2);
+        ctx.arc(sx, sy, star.radius * 1.8, 0, Math.PI * 2);
         ctx.fillStyle = colorHex;
         ctx.fill();
 
         ctx.globalAlpha = 0.8 + 0.2 * twinkle;
         ctx.beginPath();
-        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+        ctx.arc(sx, sy, star.radius, 0, Math.PI * 2);
         ctx.fillStyle = colorHex;
         ctx.fill();
 
         ctx.globalAlpha = 1;
         ctx.beginPath();
-        ctx.arc(star.x, star.y, star.radius * 0.4, 0, Math.PI * 2);
+        ctx.arc(sx, sy, star.radius * 0.4, 0, Math.PI * 2);
         ctx.fillStyle = "#ffffff";
         ctx.fill();
 
@@ -218,13 +248,37 @@ export default function ConstellationGallery() {
     return () => cancelAnimationFrame(animId);
   }, [stars, canvasSize, isMobile]);
 
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    dragRef.current.startX = e.clientX - dragRef.current.offsetX;
+    dragRef.current.startY = e.clientY - dragRef.current.offsetY;
+    dragRef.current.isDragging = true;
+    dragRef.current.moved = false;
+    canvasRef.current?.setPointerCapture(e.pointerId);
+  }, []);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragRef.current.isDragging) return;
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+      dragRef.current.moved = true;
+    }
+    dragRef.current.offsetX = dx;
+    dragRef.current.offsetY = dy;
+  }, []);
+
+  const handlePointerUp = useCallback(() => {
+    dragRef.current.isDragging = false;
+  }, []);
+
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
+      if (dragRef.current.moved) return;
       const canvas = canvasRef.current;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
+      const mx = e.clientX - rect.left - dragRef.current.offsetX;
+      const my = e.clientY - rect.top - dragRef.current.offsetY;
 
       const hit = stars.find(
         (s) => Math.hypot(s.x - mx, s.y - my) < s.radius + 12
@@ -303,8 +357,13 @@ export default function ConstellationGallery() {
           >
             <canvas
               ref={canvasRef}
-              className="cursor-pointer"
+              className="cursor-grab active:cursor-grabbing"
+              style={{ touchAction: "none" }}
               onClick={handleCanvasClick}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
             />
           </div>
         )}

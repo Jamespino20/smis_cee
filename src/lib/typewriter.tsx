@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 
 interface TypewriterProps {
   text: string;
@@ -13,12 +13,12 @@ interface TypewriterProps {
 
 export default function Typewriter({
   text,
-  speed = 30,
+  speed = 40,
   delay = 0,
   className = "",
   style,
 }: TypewriterProps) {
-  const [displayed, setDisplayed] = useState(delay === 0 ? "" : text);
+  const [visibleCount, setVisibleCount] = useState(0);
   const [started, setStarted] = useState(delay === 0);
 
   useEffect(() => {
@@ -30,29 +30,42 @@ export default function Typewriter({
 
   useEffect(() => {
     if (!started) return;
-    let index = 0;
     const interval = setInterval(() => {
-      index++;
-      setDisplayed(text.slice(0, index));
-      if (index >= text.length) clearInterval(interval);
+      setVisibleCount((prev) => {
+        if (prev >= text.length) {
+          clearInterval(interval);
+          return prev;
+        }
+        return prev + 1;
+      });
     }, speed);
     return () => clearInterval(interval);
   }, [text, speed, started]);
 
-  if (!started) return <span className={className} style={style}>{text}</span>;
+  if (!started) {
+    return <span className={className} style={style}>{text}</span>;
+  }
+
+  const chars = text.split("");
 
   return (
-    <motion.span className={className} style={style}>
-      {displayed}
-      {displayed.length < text.length && (
-        <motion.span
-          animate={{ opacity: [1, 0] }}
-          transition={{ duration: 0.5, repeat: Infinity }}
-          className="inline-block"
-        >
-          |
-        </motion.span>
-      )}
-    </motion.span>
+    <span className={className} style={style}>
+      <AnimatePresence mode="popLayout">
+        {chars.map((char, i) => {
+          if (i >= visibleCount) return null;
+          return (
+            <motion.span
+              key={i}
+              initial={{ opacity: 0, y: 8, filter: "blur(4px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+              className="inline-block"
+            >
+              {char === " " ? "\u00A0" : char}
+            </motion.span>
+          );
+        })}
+      </AnimatePresence>
+    </span>
   );
 }

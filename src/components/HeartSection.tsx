@@ -1,12 +1,34 @@
 "use client";
 
 import { motion, AnimatePresence } from "motion/react";
-import { useState } from "react";
-import MagicCore from "./MagicCore";
+import { useState, useCallback } from "react";
+import { animate } from "animejs";
 import Typewriter from "@/lib/typewriter";
 
 export default function HeartSection() {
   const [revealed, setRevealed] = useState(false);
+
+  const handleReveal = useCallback(() => {
+    if (revealed) return;
+
+    const els = document.querySelectorAll("[data-heart-particle]");
+    els.forEach((el) => {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 80 + Math.random() * 120;
+      animate(el, {
+        translateX: Math.cos(angle) * dist,
+        translateY: Math.sin(angle) * dist,
+        opacity: [1, 0],
+        scale: [1, 0],
+        duration: 800 + Math.random() * 400,
+        ease: "outExpo",
+      });
+    });
+
+    setTimeout(() => {
+      setRevealed(true);
+    }, 500);
+  }, [revealed]);
 
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center py-20 sm:py-32 px-5 sm:px-6 overflow-hidden">
@@ -43,7 +65,10 @@ export default function HeartSection() {
           transition={{ duration: 1, delay: 0.3 }}
           className="relative mb-10 sm:mb-16"
         >
-          <div className="relative w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 mx-auto flex items-center justify-center">
+          <div className="relative w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 mx-auto flex items-center justify-center cursor-pointer"
+            onClick={!revealed ? handleReveal : undefined}
+            onTouchEnd={!revealed ? (e) => { e.preventDefault(); handleReveal(); } : undefined}
+          >
             {/* Glow aura */}
             <motion.div
               className="absolute inset-0 rounded-full"
@@ -64,6 +89,19 @@ export default function HeartSection() {
               animate={{ scale: [1, 1.25, 1], opacity: [0.2, 0, 0.2] }}
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
             />
+            {/* Decorative burst particles */}
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={i}
+                data-heart-particle
+                className="absolute w-2 h-2 rounded-full"
+                style={{
+                  background: i % 2 === 0 ? "#c9a96e" : "#e8a0bf",
+                  left: `${40 + Math.cos((i / 8) * Math.PI * 2) * 35}%`,
+                  top: `${40 + Math.sin((i / 8) * Math.PI * 2) * 35}%`,
+                }}
+              />
+            ))}
             {/* Heart SVG */}
             <motion.div
               className="relative z-10"
@@ -99,19 +137,7 @@ export default function HeartSection() {
           </div>
         </motion.div>
 
-        {/* Magic core interaction */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.6 }}
-          className="mb-10 sm:mb-16"
-        >
-          <p className="font-serif text-cream/60 text-xs sm:text-sm mb-6 sm:mb-8 italic">
-            {revealed ? "The core remembers you." : "Touch the core to unlock the message."}
-          </p>
-          <MagicCore onReveal={() => setRevealed(true)} revealed={revealed} />
-        </motion.div>
+
 
         {/* Birthday message */}
         <AnimatePresence>

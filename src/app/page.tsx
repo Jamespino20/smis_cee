@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import HeroSection from "@/components/HeroSection";
+import StarfieldOpening from "@/components/StarfieldOpening";
 import JourneyChapters from "@/components/JourneyChapters";
 import HeartSection from "@/components/HeartSection";
 import GiftSection from "@/components/GiftSection";
@@ -14,8 +14,14 @@ import { useColorJourney } from "@/lib/colorJourney";
 
 export default function Home() {
   useColorJourney();
+  const [entered, setEntered] = useState(false);
   const [foundStars, setFoundStars] = useState<Set<string>>(new Set());
   const [secretActive, setSecretActive] = useState(false);
+
+  const handleEnter = useCallback(() => {
+    setEntered(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   const handleStarFound = useCallback((id: string) => {
     setFoundStars((prev) => {
@@ -38,42 +44,49 @@ export default function Home() {
 
   return (
     <>
-      <CherryBlossoms />
-      <FloatingIslands />
-
-      {/* Hidden stars */}
-      <HiddenStar
-        id="hero-star"
-        onFound={handleStarFound}
-        className="top-[35%] right-[15%] z-20"
-      />
-      <HiddenStar
-        id="chapter-star"
-        onFound={handleStarFound}
-        className="top-[52%] left-[8%] z-20"
-      />
-      <HiddenStar
-        id="heart-star"
-        onFound={handleStarFound}
-        className="top-[72%] right-[20%] z-20"
-      />
-
-      {/* Star counter */}
-      {foundStars.size > 0 && !secretActive && (
-        <div className="fixed bottom-4 right-4 z-[60] font-serif text-xs tracking-widest" style={{ color: "rgba(212,165,116,0.5)" }}>
-          ★ {foundStars.size}/3
+      {!entered && (
+        <div className="fixed inset-0 z-50">
+          <StarfieldOpening onEnter={handleEnter} />
         </div>
       )}
 
-      <main className="relative z-10">
-        <HeroSection />
-        <JourneyChapters />
-        <HeartSection />
-        <GiftSection />
-        <EndingSequence onReturnToMap={handleReturnToMap} />
-      </main>
+      {entered && (
+        <>
+          <CherryBlossoms />
+          <FloatingIslands />
 
-      <SecretEnding active={secretActive} onComplete={handleSecretComplete} />
+          <HiddenStar
+            id="hero-star"
+            onFound={handleStarFound}
+            className="top-[35%] right-[15%] z-20"
+          />
+          <HiddenStar
+            id="chapter-star"
+            onFound={handleStarFound}
+            className="top-[52%] left-[8%] z-20"
+          />
+          <HiddenStar
+            id="heart-star"
+            onFound={handleStarFound}
+            className="top-[72%] right-[20%] z-20"
+          />
+
+          {foundStars.size > 0 && !secretActive && (
+            <div className="fixed bottom-4 right-4 z-[60] font-serif text-xs tracking-widest" style={{ color: "rgba(212,165,116,0.5)" }}>
+              ★ {foundStars.size}/3
+            </div>
+          )}
+
+          <main className="relative z-10">
+            <JourneyChapters />
+            <HeartSection />
+            <GiftSection />
+            <EndingSequence onReturnToMap={handleReturnToMap} />
+          </main>
+
+          <SecretEnding active={secretActive} onComplete={handleSecretComplete} />
+        </>
+      )}
     </>
   );
 }

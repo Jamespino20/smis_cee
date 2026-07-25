@@ -278,11 +278,29 @@ export default function StarfieldOpening({ onEnter }: StarfieldOpeningProps) {
         style={{ background: BG_COLOR }}
       />
 
+      {/* Character art - centered, subtle */}
+      <div className="absolute inset-0 z-[6] flex items-center justify-center pointer-events-none">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 0.25, 0.15] }}
+          transition={{ duration: 3, delay: 1 }}
+          className="relative w-48 h-48 sm:w-72 sm:h-72 md:w-96 md:h-96"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/noot.png"
+            alt=""
+            className="w-full h-full object-contain"
+            style={{ filter: "drop-shadow(0 0 60px rgba(201,169,110,0.3))" }}
+          />
+        </motion.div>
+      </div>
+
       {/* Vignette overlay - fades edges to dark */}
       <div
         className="absolute inset-0 pointer-events-none z-[5]"
         style={{
-          background: "radial-gradient(ellipse at center, transparent 40%, rgba(10,10,26,0.6) 70%, rgba(10,10,26,0.95) 100%)",
+          background: "radial-gradient(ellipse at center, transparent 35%, rgba(10,10,26,0.7) 65%, rgba(10,10,26,0.95) 100%)",
         }}
       />
 
@@ -297,10 +315,10 @@ export default function StarfieldOpening({ onEnter }: StarfieldOpeningProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 1 }}
-                className="font-serif text-sm sm:text-base md:text-lg tracking-[0.2em] sm:tracking-[0.3em] uppercase mb-3 sm:mb-4"
+                className="font-serif text-sm sm:text-base md:text-lg tracking-[0.2em] sm:tracking-[0.3em] uppercase mb-2"
                 style={{ color: "#c9a96e" }}
               >
-                A world made for its creator
+                A message from the realm of
               </motion.p>
 
               <motion.h1
@@ -309,14 +327,26 @@ export default function StarfieldOpening({ onEnter }: StarfieldOpeningProps) {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.1 }}
                 transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
-                className="font-display text-5xl sm:text-6xl md:text-8xl lg:text-9xl mb-6 sm:mb-8"
+                className="font-display text-4xl sm:text-6xl md:text-8xl lg:text-9xl tracking-tight mb-6 sm:mb-8"
                 style={{
                   color: "#c9a96e",
                   textShadow: "0 0 60px rgba(201,169,110,0.3)",
                 }}
               >
-                Welcome to Vestia.
+                Vestia
               </motion.h1>
+
+              <motion.p
+                key="for-smiscee"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 1, delay: 0.6 }}
+                className="font-serif text-base sm:text-lg md:text-xl tracking-wide mb-6 sm:mb-8"
+                style={{ color: "rgba(245,240,232,0.6)" }}
+              >
+                For Smiscee, on the day the stars aligned
+              </motion.p>
 
               <motion.div
                 key="line"

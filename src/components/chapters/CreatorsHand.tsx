@@ -76,48 +76,26 @@ function AnimatedPath({
 }
 
 export default function CreatorsHand({
-  isActive,
   onComplete,
 }: {
   isActive: boolean;
   onComplete: () => void;
 }) {
   const [phaseIndex, setPhaseIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-
-  const clearTimeouts = () => {
-    timeoutsRef.current.forEach(clearTimeout);
-    timeoutsRef.current = [];
-  };
 
   useEffect(() => {
-    if (!isActive || isAnimating) return;
-
-    setIsAnimating(true);
     let currentPhase = 0;
-
     const advancePhase = () => {
       if (currentPhase >= PHASES.length) {
-        setIsAnimating(false);
         onComplete();
         return;
       }
       setPhaseIndex(currentPhase);
-      const phase = PHASES[currentPhase];
-      const t = setTimeout(() => {
-        currentPhase++;
-        advancePhase();
-      }, phase.duration);
-      timeoutsRef.current.push(t);
+      currentPhase++;
+      setTimeout(advancePhase, PHASES[currentPhase - 1].duration);
     };
-
-    advancePhase();
-
-    return () => clearTimeouts();
-  }, [isActive, onComplete, isAnimating]);
-
-  if (!isActive) return null;
+    setTimeout(advancePhase, 500);
+  }, [onComplete]);
 
   const currentPhase = PHASES[phaseIndex];
   const activePaths = new Set(currentPhase.paths);

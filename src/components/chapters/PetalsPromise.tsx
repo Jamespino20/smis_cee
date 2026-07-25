@@ -170,7 +170,7 @@ export default function PetalsPromise({
       ctx.clearRect(0, 0, w, h);
 
       // Spawn petals
-      if (phase === "drifting" || phase === "gathering") {
+      if (phase === "drifting" || phase === "gathering" || phase === "done") {
         if (Math.random() < 0.4) {
           const windX = (mousePos.x - 0.5) * 4;
           petalsRef.current.push({
@@ -211,7 +211,7 @@ export default function PetalsPromise({
         p.x += p.vx;
         p.y += p.vy;
         // Continuous wind from cursor
-        const windForce = (mousePos.x - 0.5) * 0.3;
+        const windForce = (mousePos.x - 0.5) * 0.6;
         p.x += windForce;
         p.wobble += p.wobbleSpeed * dt;
         p.x += Math.sin(p.wobble) * 0.5;
@@ -319,23 +319,21 @@ export default function PetalsPromise({
         )}
       </AnimatePresence>
 
-      {/* Final message */}
-      <AnimatePresence>
-        {phase === "message" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-            className="absolute z-20 text-center px-6"
-          >
-            <p className="font-display text-xl md:text-2xl lg:text-3xl text-[#f5f0e8] tracking-wide leading-relaxed">
-              Each petal carries a whisper:
-              <br />
-              <span className="text-[#d4a0b9]">you are loved, you are celebrated, you are home.</span>
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Final message - persists once shown */}
+      {(phase === "message" || phase === "done") && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+          className="absolute z-20 text-center px-6"
+        >
+          <p className="font-display text-xl md:text-2xl lg:text-3xl text-[#f5f0e8] tracking-wide leading-relaxed">
+            Each petal carries a whisper:
+            <br />
+            <span className="text-[#d4a0b9]">you are loved, you are celebrated, you are home.</span>
+          </p>
+        </motion.div>
+      )}
 
       {/* Hint */}
       {phase === "drifting" && (

@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { random } from "animejs";
+import { animate, random } from "animejs";
 
 const COLORS = {
   oldGold: "#c9a96e",
@@ -32,6 +32,8 @@ export default function ArchersAim({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
   const [phase, setPhase] = useState<"aiming" | "drawing" | "fired" | "impact" | "done">("aiming");
+  const [pullX, setPullX] = useState(60);
+  const [isDragging, setIsDragging] = useState(false);
   const [bowGlow, setBowGlow] = useState(false);
   const particlesRef = useRef<WindParticle[]>([]);
   const frameRef = useRef<number>(0);
@@ -48,17 +50,89 @@ export default function ArchersAim({
     });
   }, []);
 
-  const handleBowClick = useCallback(() => {
+  const handleBowDown = useCallback((clientX: number) => {
     if (phase !== "aiming" || !isActive) return;
-
+    setIsDragging(true);
     setPhase("drawing");
-    setTimeout(() => setPhase("fired"), 1200);
-    setTimeout(() => setPhase("impact"), 2200);
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const bowCenterX = rect.left + rect.width * 0.75;
+    const diff = clientX - bowCenterX;
+    const clamped = Math.max(60, Math.min(80, 60 + diff / 3));
+    setPullX(clamped);
+  }, [phase, isActive]);
+
+  const handleBowMove = useCallback((clientX: number) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const bowCenterX = rect.left + rect.width * 0.75;
+    const diff = clientX - bowCenterX;
+    const clamped = Math.max(60, Math.min(80, 60 + diff / 3));
+    setPullX(clamped);
+  }, []);
+
+  const handleBowUp = useCallback(() => {
+    setIsDragging(false);
+    setPullX(60);
+    setPhase("fired");
+    setTimeout(() => setPhase("impact"), 1000);
     setTimeout(() => {
       setPhase("done");
       onComplete();
-    }, 4500);
-  }, [phase, isActive, onComplete]);
+    }, 3000);
+  }, [onComplete]);
+
+  // Document-level drag listeners
+  useEffect(() => {
+    if (!isDragging) return;
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+      handleBowMove(clientX);
+    };
+    const handleUp = () => {
+      handleBowUp();
+    };
+    document.addEventListener("mousemove", handleMove);
+    document.addEventListener("mouseup", handleUp);
+    document.addEventListener("touchmove", handleMove, { passive: false });
+    document.addEventListener("touchend", handleUp);
+    return () => {
+      document.removeEventListener("mousemove", handleMove);
+      document.removeEventListener("mouseup", handleUp);
+      document.removeEventListener("touchmove", handleMove);
+      document.removeEventListener("touchend", handleUp);
+    };
+  }, [isDragging, handleBowMove, handleBowUp]);
+
+  // Rose petal explosion on impact
+  useEffect(() => {
+    if (phase !== "impact" || !containerRef.current) return;
+    const container = containerRef.current;
+    const particles: HTMLDivElement[] = [];
+    for (let i = 0; i < 30; i++) {
+      const el = document.createElement("div");
+      const hue = 330 + Math.random() * 30;
+      el.className = "absolute w-2 h-2 rounded-full pointer-events-none";
+      el.style.cssText = `
+        background: hsl(${hue}, 70%, 70%);
+        box-shadow: 0 0 6px hsla(${hue}, 70%, 60%, 0.8);
+        left: 10%; top: 35%;
+      `;
+      container.appendChild(el);
+      particles.push(el);
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 50 + Math.random() * 150;
+      animate(el, {
+        translateX: Math.cos(angle) * dist,
+        translateY: Math.sin(angle) * dist,
+        opacity: [1, 0],
+        scale: [1, 0.3],
+        duration: 800 + Math.random() * 600,
+        ease: "outExpo",
+      });
+      setTimeout(() => el.remove(), 1500);
+    }
+  }, [phase]);
 
   // Canvas wind particles
   useEffect(() => {
@@ -174,23 +248,20 @@ export default function ArchersAim({
 
       {/* Bow (interactive zone) */}
       <div
-        className="absolute z-20 cursor-pointer"
+        className="absolute z-20 cursor-grab active:cursor-grabbing"
         style={{ right: "20%", top: "30%" }}
         onMouseEnter={() => setBowGlow(true)}
-        onMouseLeave={() => setBowGlow(false)}
-        onClick={handleBowClick}
-        onTouchEnd={(e) => {
-          e.preventDefault();
-          handleBowClick();
-        }}
+        onMouseLeave={() => { setBowGlow(false); if (!isDragging) handleBowUp(); }}
+        onMouseDown={(e) => handleBowDown(e.clientX)}
+        onTouchStart={(e) => { e.preventDefault(); handleBowDown(e.touches[0].clientX); }}
       >
         {/* Bow shape */}
         <motion.div
           animate={{
-            scaleX: phase === "drawing" ? 0.85 : 1,
-            x: phase === "drawing" ? -5 : 0,
+            scaleX: phase === "drawing" ? 1.05 : 1,
+            x: phase === "drawing" ? 5 : 0,
           }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
           className="relative"
         >
           <svg width="120" height="200" viewBox="0 0 120 200" className="overflow-visible">
@@ -212,28 +283,26 @@ export default function ArchersAim({
               }}
               transition={{ duration: 1.5, repeat: Infinity }}
             />
-            {/* Bowstring - V shape when pulled */}
+            {/* Bowstring - V shape outward when pulled */}
             <motion.line
               x1="60" y1="10"
-              x2={phase === "drawing" ? 45 : 60}
-              y2={phase === "drawing" ? 100 : 100}
+              x2={phase === "drawing" ? pullX : 60}
+              y2="100"
               stroke={COLORS.cream} strokeWidth="1.5"
               animate={{
-                x2: phase === "drawing" ? 45 : 60,
-                y2: phase === "drawing" ? 100 : 100,
+                x2: phase === "drawing" ? pullX : 60,
               }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
             />
             <motion.line
-              x1={phase === "drawing" ? 45 : 60}
-              y1={phase === "drawing" ? 100 : 100}
+              x1={phase === "drawing" ? pullX : 60}
+              y1="100"
               x2="60" y2="190"
               stroke={COLORS.cream} strokeWidth="1.5"
               animate={{
-                x1: phase === "drawing" ? 45 : 60,
-                y1: phase === "drawing" ? 100 : 100,
+                x1: phase === "drawing" ? pullX : 60,
               }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
             />
             {/* Arrow (visible when drawing) */}
             <AnimatePresence>
@@ -244,28 +313,47 @@ export default function ArchersAim({
                   exit={{ opacity: 0, x: -200 }}
                   transition={{ duration: 0.3 }}
                 >
-                  {/* Arrow shaft: from nock at string to tip past bow */}
+                  {/* Arrow shaft: from nock at string to tip pointing left */}
                   <motion.line
-                    x1={45} y1="100"
-                    x2={15} y2="100"
+                    x1={pullX} y1="100"
+                    x2={pullX - 30} y2="100"
                     stroke={COLORS.woodBrown}
                     strokeWidth="2"
                     strokeLinecap="round"
                   />
-                  {/* Arrowhead */}
+                  {/* Arrowhead (pointing left) */}
                   <motion.polygon
-                    points="20,95 15,100 20,105"
+                    points={`${pullX - 25},95 ${pullX - 30},100 ${pullX - 25},105`}
                     fill={COLORS.oldGold}
                   />
                   {/* Fletching */}
                   <motion.polygon
-                    points="42,96 45,100 42,104"
+                    points={`${pullX - 3},96 ${pullX},100 ${pullX - 3},104`}
                     fill={COLORS.terracotta}
                     opacity={0.6}
                   />
                 </motion.g>
               )}
             </AnimatePresence>
+          </svg>
+        </motion.div>
+      </div>
+
+      {/* Target on left side */}
+      <div
+        className="absolute z-10 pointer-events-none"
+        style={{ left: "10%", top: "35%" }}
+      >
+        <motion.div
+          animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="38" fill="none" stroke={COLORS.oldGold} strokeWidth="1" opacity="0.3" />
+            <circle cx="40" cy="40" r="28" fill="none" stroke={COLORS.oldGold} strokeWidth="1.5" opacity="0.4" />
+            <circle cx="40" cy="40" r="18" fill="none" stroke={COLORS.terracotta} strokeWidth="2" opacity="0.5" />
+            <circle cx="40" cy="40" r="8" fill={COLORS.terracotta} opacity="0.4" />
+            <circle cx="40" cy="40" r="3" fill={COLORS.oldGold} opacity="0.6" />
           </svg>
         </motion.div>
       </div>
@@ -321,7 +409,7 @@ export default function ArchersAim({
             className="absolute bottom-[12%] left-0 right-0 text-center px-6 z-30"
           >
             <p className="font-display text-xl md:text-2xl lg:text-3xl text-[#f5f0e8] tracking-wide">
-              Aim. Believe. Release.
+              The aim of a true heart never misses.
             </p>
           </motion.div>
         )}
