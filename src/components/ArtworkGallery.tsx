@@ -27,6 +27,7 @@ export default function ArtworkGallery() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -281,39 +282,112 @@ export default function ArtworkGallery() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {artworks.map((artwork, i) => (
-              <motion.div
-                key={artwork.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="group bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 overflow-hidden hover:border-sunset-gold/30 transition-colors"
-              >
-                <div className="relative aspect-square overflow-hidden">
-                  <Image
-                    src={artwork.imageUrl}
-                    alt={artwork.title}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  />
+          <div className="relative">
+            {/* 3D Carousel */}
+            <div
+              className="relative h-[400px] sm:h-[500px] flex items-center justify-center"
+              style={{ perspective: "1200px" }}
+            >
+              <div className="relative w-full h-full flex items-center justify-center">
+                {artworks.map((artwork, i) => {
+                  const offset = i - activeIndex;
+                  const absOffset = Math.abs(offset);
+                  const isActive = offset === 0;
+                  const translateX = offset * 220;
+                  const translateZ = isActive ? 0 : -150 * absOffset;
+                  const rotateY = offset * -25;
+                  const opacity = absOffset > 2 ? 0 : 1 - absOffset * 0.3;
+                  const scale = isActive ? 1 : 0.75;
+
+                  return (
+                    <div
+                      key={artwork.id}
+                      className="absolute transition-all duration-500 ease-out cursor-pointer"
+                      style={{
+                        transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
+                        opacity,
+                        zIndex: isActive ? 10 : 5 - absOffset,
+                      }}
+                      onClick={() => setActiveIndex(i)}
+                    >
+                      <div
+                        className={`bg-white/5 backdrop-blur-sm rounded-xl border overflow-hidden transition-all duration-300 ${
+                          isActive
+                            ? "border-sunset-gold/40 shadow-2xl shadow-sunset-gold/10"
+                            : "border-white/10"
+                        }`}
+                        style={{ width: "280px" }}
+                      >
+                        <div className="relative aspect-square overflow-hidden">
+                          <Image
+                            src={artwork.imageUrl}
+                            alt={artwork.title}
+                            fill
+                            className="object-cover"
+                            sizes="280px"
+                          />
+                        </div>
+                        <div className="p-4">
+                          <h4 className="font-display text-sunset-gold text-sm mb-1">
+                            {artwork.title}
+                          </h4>
+                          <p className="font-serif text-cream/60 text-xs">
+                            by {artwork.artistName}
+                          </p>
+                          {isActive && artwork.description && (
+                            <p className="font-serif text-cream/40 text-xs mt-2 italic">
+                              {artwork.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Navigation */}
+            {artworks.length > 1 && (
+              <div className="flex items-center justify-center gap-4 mt-6">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setActiveIndex((prev) => (prev - 1 + artworks.length) % artworks.length)}
+                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-colors"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cream">
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                </motion.button>
+
+                {/* Dots */}
+                <div className="flex gap-2">
+                  {artworks.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveIndex(i)}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        i === activeIndex
+                          ? "bg-sunset-gold w-6"
+                          : "bg-white/30 hover:bg-white/50"
+                      }`}
+                    />
+                  ))}
                 </div>
-                <div className="p-4">
-                  <h4 className="font-display text-sunset-gold text-sm mb-1">
-                    {artwork.title}
-                  </h4>
-                  <p className="font-serif text-cream/60 text-xs">
-                    by {artwork.artistName}
-                  </p>
-                  {artwork.description && (
-                    <p className="font-serif text-cream/40 text-xs mt-2 italic">
-                      {artwork.description}
-                    </p>
-                  )}
-                </div>
-              </motion.div>
-            ))}
+
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setActiveIndex((prev) => (prev + 1) % artworks.length)}
+                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-colors"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cream">
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </motion.button>
+              </div>
+            )}
           </div>
         )}
       </motion.div>
