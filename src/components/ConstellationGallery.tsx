@@ -117,17 +117,9 @@ export default function ConstellationGallery() {
   const [color, setColor] = useState("celebration");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [canvasSize, setCanvasSize] = useState({ w: 800, h: 500 });
   const starDataKey = stars.length > 0 ? stars[0].id : null;
   const dragRef = useRef({ isDragging: false, startX: 0, startY: 0, offsetX: 0, offsetY: 0, moved: false });
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 640);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
 
   useEffect(() => {
     fetch("/api/guestbook")
@@ -146,7 +138,7 @@ export default function ConstellationGallery() {
     if (!stars.length) return;
 
     const canvas = canvasRef.current;
-    if (!canvas || isMobile) return;
+    if (!canvas) return;
 
     const container = canvas.parentElement;
     if (!container) return;
@@ -162,11 +154,11 @@ export default function ConstellationGallery() {
 
     const positioned = positionStars(stars, w, h);
     setStars(positioned);
-  }, [starDataKey, isMobile]);
+  }, [starDataKey]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || isMobile) return;
+    if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
@@ -246,7 +238,7 @@ export default function ConstellationGallery() {
 
     draw();
     return () => cancelAnimationFrame(animId);
-  }, [stars, canvasSize, isMobile]);
+  }, [stars, canvasSize]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     dragRef.current.startX = e.clientX - dragRef.current.offsetX;
@@ -348,57 +340,23 @@ export default function ConstellationGallery() {
           Each wish becomes a star. Click a star to read its light.
         </p>
 
-        {/* Canvas sky — desktop */}
-        {!isMobile && (
-          <div className="relative mb-10 rounded-xl overflow-hidden border border-white/10"
-            style={{
-              background: "linear-gradient(180deg, #0a0a1a 0%, #1a1a3e 100%)",
-            }}
-          >
-            <canvas
-              ref={canvasRef}
-              className="cursor-grab active:cursor-grabbing"
-              style={{ touchAction: "none" }}
-              onClick={handleCanvasClick}
-              onPointerDown={handlePointerDown}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerCancel={handlePointerUp}
-            />
-          </div>
-        )}
-
-        {/* Mobile: simplified vertical list */}
-        {isMobile && (
-          <div className="space-y-3 mb-10">
-            {stars.map((star) => (
-              <motion.button
-                key={star.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={isInView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 0.4 }}
-                onClick={() => setSelectedStar(star)}
-                className="w-full flex items-center gap-3 bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/10 text-left"
-              >
-                <span
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{
-                    backgroundColor: COLOR_MAP[star.color] || COLOR_MAP.celebration,
-                    boxShadow: `0 0 8px ${COLOR_MAP[star.color] || COLOR_MAP.celebration}`,
-                  }}
-                />
-                <div className="min-w-0">
-                  <p className="font-display text-sunset-gold text-sm truncate">
-                    {star.name}
-                  </p>
-                  <p className="font-serif text-cream/60 text-xs truncate">
-                    {star.message}
-                  </p>
-                </div>
-              </motion.button>
-            ))}
-          </div>
-        )}
+        {/* Canvas sky */}
+        <div className="relative mb-10 rounded-xl overflow-hidden border border-white/10"
+          style={{
+            background: "linear-gradient(180deg, #0a0a1a 0%, #1a1a3e 100%)",
+          }}
+        >
+          <canvas
+            ref={canvasRef}
+            className="cursor-grab active:cursor-grabbing"
+            style={{ touchAction: "none" }}
+            onClick={handleCanvasClick}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+          />
+        </div>
 
         {/* Star popup */}
         <AnimatePresence>
