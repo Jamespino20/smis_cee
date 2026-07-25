@@ -3,18 +3,7 @@
 import { motion } from "motion/react";
 import { useRef, useCallback, useState } from "react";
 
-function generateArtifactNumber(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let result = "VES-";
-  for (let i = 0; i < 4; i++) {
-    result += chars[Math.floor(Math.random() * chars.length)];
-  }
-  result += "-";
-  for (let i = 0; i < 4; i++) {
-    result += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return result;
-}
+const ARTIFACT_NUMBER = "VES-852G-CR47";
 
 function drawSeal(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number) {
   const gold = "#c9a96e";
@@ -112,7 +101,6 @@ function seededRandom(seed: number) {
 
 export default function ShareableCard() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [artifactNum] = useState(generateArtifactNumber);
   const [copied, setCopied] = useState(false);
 
   const generateCard = useCallback(() => {
@@ -296,7 +284,7 @@ export default function ShareableCard() {
       ctx.globalAlpha = 0.4;
       ctx.font = "13px monospace";
       ctx.textAlign = "left";
-      ctx.fillText(artifactNum, textX, 445);
+      ctx.fillText(ARTIFACT_NUMBER, textX, 445);
       ctx.restore();
 
       // Draw the Vestian seal
@@ -331,7 +319,7 @@ export default function ShareableCard() {
     link.download = "smiscee-vestian-artifact.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
-  }, [artifactNum]);
+  }, []);
 
   const shareOnTwitter = useCallback(() => {
     const text = encodeURIComponent(
@@ -393,7 +381,7 @@ export default function ShareableCard() {
             className="font-mono text-[10px] mt-3 tracking-wider"
             style={{ color: "#3d2b1f40" }}
           >
-            {artifactNum}
+            {ARTIFACT_NUMBER}
           </p>
         </div>
       </div>
@@ -406,9 +394,10 @@ export default function ShareableCard() {
           onClick={generateCard}
           className="flex items-center justify-center gap-2 rounded-lg px-5 sm:px-6 py-3 font-serif text-sm transition-colors w-full sm:w-auto"
           style={{
-            backgroundColor: "#c9a96e20",
-            border: "1px solid #c9a96e40",
-            color: "#3d2b1f",
+            backgroundColor: "rgba(201,169,110,0.85)",
+            border: "1px solid rgba(201,169,110,0.5)",
+            color: "#1a1a2e",
+            textShadow: "0 1px 2px rgba(255,255,255,0.2)",
           }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -423,9 +412,10 @@ export default function ShareableCard() {
           onClick={shareOnTwitter}
           className="flex items-center justify-center gap-2 rounded-lg px-5 sm:px-6 py-3 font-serif text-sm transition-colors w-full sm:w-auto"
           style={{
-            backgroundColor: "#1DA1F220",
-            border: "1px solid #1DA1F240",
-            color: "#3d2b1f",
+            backgroundColor: "rgba(29,161,242,0.85)",
+            border: "1px solid rgba(29,161,242,0.5)",
+            color: "#ffffff",
+            textShadow: "0 1px 2px rgba(0,0,0,0.2)",
           }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -440,9 +430,10 @@ export default function ShareableCard() {
           onClick={copyLink}
           className="flex items-center justify-center gap-2 rounded-lg px-5 sm:px-6 py-3 font-serif text-sm transition-colors w-full sm:w-auto"
           style={{
-            backgroundColor: "#c9a96e15",
-            border: "1px solid #c9a96e30",
-            color: "#3d2b1f",
+            backgroundColor: "rgba(201,169,110,0.75)",
+            border: "1px solid rgba(201,169,110,0.4)",
+            color: "#1a1a2e",
+            textShadow: "0 1px 2px rgba(255,255,255,0.15)",
           }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

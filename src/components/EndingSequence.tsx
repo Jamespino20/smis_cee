@@ -2,6 +2,7 @@
 
 import { motion, useInView } from "motion/react";
 import { useRef, useEffect, useState, useCallback } from "react";
+import Typewriter from "@/lib/typewriter";
 
 interface EndingSequenceProps {
   onReturnToMap: () => void;
@@ -12,6 +13,7 @@ export default function EndingSequence({ onReturnToMap }: EndingSequenceProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isInView = useInView(sectionRef, { margin: "-200px" });
   const [phase, setPhase] = useState<"stars" | "gather" | "candle" | "message" | "done">("stars");
+  const [flash, setFlash] = useState(false);
   const animationRef = useRef<number>(0);
 
   const runStarGathering = useCallback(() => {
@@ -75,6 +77,8 @@ export default function EndingSequence({ onReturnToMap }: EndingSequenceProps) {
       });
 
       if (allClose || progress > 1) {
+        setFlash(true);
+        setTimeout(() => setFlash(false), 1500);
         setPhase("candle");
         return;
       }
@@ -126,12 +130,22 @@ export default function EndingSequence({ onReturnToMap }: EndingSequenceProps) {
         />
       )}
 
+      {/* White flash when particles converge */}
+      {flash && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 0.6, 0] }}
+          transition={{ duration: 1.5, times: [0, 0.15, 1] }}
+          className="absolute inset-0 z-20 bg-white pointer-events-none"
+        />
+      )}
+
       {/* Candle flame */}
       {(phase === "candle" || phase === "message" || phase === "done") && (
         <motion.div
-          initial={{ opacity: 0, scale: 0 }}
+          initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, ease: "easeOut" }}
+          transition={{ duration: 2, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
           className="relative z-20"
         >
           <svg width="60" height="100" viewBox="0 0 60 100" className="mb-8">
@@ -180,7 +194,7 @@ export default function EndingSequence({ onReturnToMap }: EndingSequenceProps) {
           className="relative z-20 text-center px-6"
         >
           <p className="font-display text-3xl sm:text-4xl md:text-5xl text-cream mb-6" style={{ color: "#f5f0e8" }}>
-            Happy Birthday, Smiscee.
+            <Typewriter text="Happy Birthday, Smiscee." speed={40} />
           </p>
         </motion.div>
       )}
@@ -193,7 +207,7 @@ export default function EndingSequence({ onReturnToMap }: EndingSequenceProps) {
           className="relative z-20 text-center px-6"
         >
           <p className="font-serif text-xl sm:text-2xl text-cream/80 italic mb-10" style={{ color: "rgba(245,240,232,0.8)" }}>
-            Vestia will be here whenever you return.
+            <Typewriter text="Vestia will be here whenever you return." speed={30} delay={500} />
           </p>
           <motion.button
             whileHover={{ scale: 1.05 }}

@@ -83,9 +83,14 @@ export default function PetalsPromise({
   // Phase progression
   useEffect(() => {
     if (!isActive || phase !== "drifting") return;
-    const t1 = setTimeout(() => setPhase("gathering"), 3000);
-    const t2 = setTimeout(() => setPhase("word"), 5000);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    const t = setTimeout(() => setPhase("gathering"), 2000);
+    return () => clearTimeout(t);
+  }, [isActive, phase]);
+
+  useEffect(() => {
+    if (!isActive || phase !== "gathering") return;
+    const t = setTimeout(() => setPhase("word"), 3000);
+    return () => clearTimeout(t);
   }, [isActive, phase]);
 
   useEffect(() => {
@@ -119,15 +124,20 @@ export default function PetalsPromise({
     const fontSize = Math.min(w * 0.12, 80);
     const positions = getTextPositions(WORDS[wordIndex], w / 2, h / 2, fontSize);
 
-    // Convert existing petals into word-targeting particles
-    const newParticles: WordParticle[] = positions.map((pos, i) => ({
-      targetX: pos.x,
-      targetY: pos.y,
-      x: petalsRef.current[i % petalsRef.current.length]?.x ?? random(0, w),
-      y: petalsRef.current[i % petalsRef.current.length]?.y ?? random(0, h),
-      size: random(3, 6),
-      opacity: 1,
-    }));
+    // Convert existing petals into word-targeting particles (repeat 3x for density)
+    const newParticles: WordParticle[] = [];
+    positions.forEach((pos, i) => {
+      for (let j = 0; j < 3; j++) {
+        newParticles.push({
+          targetX: pos.x,
+          targetY: pos.y,
+          x: petalsRef.current[(i * 3 + j) % petalsRef.current.length]?.x ?? random(0, w),
+          y: petalsRef.current[(i * 3 + j) % petalsRef.current.length]?.y ?? random(0, h),
+          size: random(3, 6),
+          opacity: 1,
+        });
+      }
+    });
 
     wordParticlesRef.current = newParticles;
   }, [phase, wordIndex]);
@@ -164,7 +174,7 @@ export default function PetalsPromise({
         if (Math.random() < 0.4) {
           const windX = (mousePos.x - 0.5) * 4;
           petalsRef.current.push({
-            x: random(0, w),
+            x: mousePos.x * w + random(-30, 30),
             y: random(-20, -5),
             vx: windX + random(-0.5, 0.5),
             vy: random(0.5, 2),
@@ -200,6 +210,9 @@ export default function PetalsPromise({
 
         p.x += p.vx;
         p.y += p.vy;
+        // Continuous wind from cursor
+        const windForce = (mousePos.x - 0.5) * 0.3;
+        p.x += windForce;
         p.wobble += p.wobbleSpeed * dt;
         p.x += Math.sin(p.wobble) * 0.5;
         p.rotation += p.rotSpeed;
@@ -278,7 +291,7 @@ export default function PetalsPromise({
         className="absolute top-[8%] left-0 right-0 text-center z-20"
       >
         <p className="font-display text-sm md:text-base tracking-[0.3em] uppercase text-[#d4a0b9]">
-          Chapter IV
+          IV — The Petal&apos;s Promise
         </p>
       </motion.div>
 

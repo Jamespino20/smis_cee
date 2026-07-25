@@ -73,10 +73,8 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(artwork, { status: 201 });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to upload artwork" },
-      { status: 500 }
-    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Failed to upload artwork";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

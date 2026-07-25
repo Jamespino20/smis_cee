@@ -196,7 +196,7 @@ export default function CreatorsHand({
           className="font-display text-sm md:text-base tracking-[0.3em] uppercase"
           style={{ color: COLORS.amber }}
         >
-          Chapter II
+          II — The Creator&apos;s Hand
         </p>
       </motion.div>
     </div>

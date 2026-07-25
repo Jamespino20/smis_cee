@@ -135,25 +135,41 @@ export default function ArchersAim({
       {/* Canvas for wind particles */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
 
-      {/* Parallax character image */}
+      {/* Chapter title */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="absolute top-[8%] left-0 right-0 text-center z-20"
+      >
+        <p className="font-display text-sm md:text-base tracking-[0.3em] uppercase text-[#c9a96e]">
+          III — The Archer&apos;s Aim
+        </p>
+      </motion.div>
+
+      {/* Aiming reticle */}
       <motion.div
         animate={{
-          x: (mousePos.x - 0.5) * -15,
-          y: (mousePos.y - 0.5) * -10,
+          x: (mousePos.x - 0.5) * -20,
+          y: (mousePos.y - 0.5) * -15,
         }}
         transition={{ type: "spring", stiffness: 50, damping: 20 }}
         className="absolute z-10 pointer-events-none"
         style={{ left: "15%", top: "10%" }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/noot.png"
-          alt="The Archer"
-          className="w-48 md:w-64 lg:w-80 opacity-90"
-          style={{
-            filter: "drop-shadow(0 0 30px rgba(201, 169, 110, 0.3))",
-          }}
-        />
+        <svg width="100" height="100" viewBox="0 0 100 100" className="opacity-50">
+          <circle cx="50" cy="50" r="42" fill="none" stroke={COLORS.oldGold} strokeWidth="0.8" opacity="0.4" />
+          <circle cx="50" cy="50" r="25" fill="none" stroke={COLORS.oldGold} strokeWidth="0.5" opacity="0.25" />
+          <line x1="50" y1="4" x2="50" y2="20" stroke={COLORS.oldGold} strokeWidth="0.8" opacity="0.4" />
+          <line x1="50" y1="80" x2="50" y2="96" stroke={COLORS.oldGold} strokeWidth="0.8" opacity="0.4" />
+          <line x1="4" y1="50" x2="20" y2="50" stroke={COLORS.oldGold} strokeWidth="0.8" opacity="0.4" />
+          <line x1="80" y1="50" x2="96" y2="50" stroke={COLORS.oldGold} strokeWidth="0.8" opacity="0.4" />
+          <circle cx="50" cy="50" r="3" fill={COLORS.oldGold} opacity="0.6" />
+          <text x="50" y="6" textAnchor="middle" fill={COLORS.oldGold} fontSize="7" opacity="0.35" fontFamily="serif">N</text>
+          <text x="50" y="98" textAnchor="middle" fill={COLORS.oldGold} fontSize="7" opacity="0.35" fontFamily="serif">S</text>
+          <text x="6" y="54" textAnchor="middle" fill={COLORS.oldGold} fontSize="7" opacity="0.35" fontFamily="serif">W</text>
+          <text x="94" y="54" textAnchor="middle" fill={COLORS.oldGold} fontSize="7" opacity="0.35" fontFamily="serif">E</text>
+        </svg>
       </motion.div>
 
       {/* Bow (interactive zone) */}
@@ -170,13 +186,10 @@ export default function ArchersAim({
       >
         {/* Bow shape */}
         <motion.div
-          animate={
-            phase === "drawing"
-              ? { scaleX: 0.85, x: -5 }
-              : phase === "fired"
-                ? { scaleX: 1, x: 0 }
-                : {}
-          }
+          animate={{
+            scaleX: phase === "drawing" ? 0.85 : 1,
+            x: phase === "drawing" ? -5 : 0,
+          }}
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="relative"
         >
@@ -188,59 +201,67 @@ export default function ArchersAim({
               strokeWidth="4"
               fill="none"
               strokeLinecap="round"
-              animate={
-                bowGlow
-                  ? {
-                      filter: [
-                        "drop-shadow(0 0 5px rgba(201,169,110,0.3))",
-                        "drop-shadow(0 0 15px rgba(201,169,110,0.6))",
-                        "drop-shadow(0 0 5px rgba(201,169,110,0.3))",
-                      ],
-                    }
-                  : {}
-              }
+              animate={{
+                filter: bowGlow
+                  ? [
+                      "drop-shadow(0 0 5px rgba(201,169,110,0.3))",
+                      "drop-shadow(0 0 15px rgba(201,169,110,0.6))",
+                      "drop-shadow(0 0 5px rgba(201,169,110,0.3))",
+                    ]
+                  : "drop-shadow(0 0 0 rgba(201,169,110,0))",
+              }}
               transition={{ duration: 1.5, repeat: Infinity }}
             />
-            {/* Bowstring */}
+            {/* Bowstring - V shape when pulled */}
             <motion.line
-              x1="60"
-              y1="10"
-              x2="60"
-              y2="190"
-              stroke={COLORS.cream}
-              strokeWidth="1.5"
-              animate={
-                phase === "drawing"
-                  ? { x2: 45, y2: 100 }
-                  : phase === "fired"
-                    ? { x2: 60, y2: 190 }
-                    : {}
-              }
+              x1="60" y1="10"
+              x2={phase === "drawing" ? 45 : 60}
+              y2={phase === "drawing" ? 100 : 100}
+              stroke={COLORS.cream} strokeWidth="1.5"
+              animate={{
+                x2: phase === "drawing" ? 45 : 60,
+                y2: phase === "drawing" ? 100 : 100,
+              }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            />
+            <motion.line
+              x1={phase === "drawing" ? 45 : 60}
+              y1={phase === "drawing" ? 100 : 100}
+              x2="60" y2="190"
+              stroke={COLORS.cream} strokeWidth="1.5"
+              animate={{
+                x1: phase === "drawing" ? 45 : 60,
+                y1: phase === "drawing" ? 100 : 100,
+              }}
               transition={{ duration: 0.5, ease: "easeOut" }}
             />
             {/* Arrow (visible when drawing) */}
             <AnimatePresence>
-              {(phase === "drawing" || phase === "aiming") && (
+              {phase === "drawing" && (
                 <motion.g
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0, x: -200 }}
                   transition={{ duration: 0.3 }}
                 >
+                  {/* Arrow shaft: from nock at string to tip past bow */}
                   <motion.line
-                    x1="60"
-                    y1="100"
-                    x2="60"
-                    y2="100"
-                    stroke={COLORS.cream}
+                    x1={45} y1="100"
+                    x2={15} y2="100"
+                    stroke={COLORS.woodBrown}
                     strokeWidth="2"
-                    animate={phase === "drawing" ? { x1: 45 } : {}}
+                    strokeLinecap="round"
                   />
                   {/* Arrowhead */}
                   <motion.polygon
-                    points="55,97 60,100 55,103"
+                    points="20,95 15,100 20,105"
                     fill={COLORS.oldGold}
-                    animate={phase === "drawing" ? { points: "40,97 45,100 40,103" } : {}}
+                  />
+                  {/* Fletching */}
+                  <motion.polygon
+                    points="42,96 45,100 42,104"
+                    fill={COLORS.terracotta}
+                    opacity={0.6}
                   />
                 </motion.g>
               )}

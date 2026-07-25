@@ -278,6 +278,14 @@ export default function StarfieldOpening({ onEnter }: StarfieldOpeningProps) {
         style={{ background: BG_COLOR }}
       />
 
+      {/* Vignette overlay - fades edges to dark */}
+      <div
+        className="absolute inset-0 pointer-events-none z-[5]"
+        style={{
+          background: "radial-gradient(ellipse at center, transparent 40%, rgba(10,10,26,0.6) 70%, rgba(10,10,26,0.95) 100%)",
+        }}
+      />
+
       {/* Text overlay */}
       <div className="relative z-10 text-center px-5 sm:px-6 pointer-events-none">
         <AnimatePresence>

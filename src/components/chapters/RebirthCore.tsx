@@ -256,6 +256,18 @@ export default function RebirthCore({
         )}
       </AnimatePresence>
 
+      {/* Title */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="absolute top-[8%] left-0 right-0 text-center z-30"
+      >
+        <p className="font-display text-sm md:text-base tracking-[0.3em] uppercase text-[#c9a96e]">
+          I — The Rebirth Core
+        </p>
+      </motion.div>
+
       {/* Tap hint */}
       {phase === "idle" && (
         <motion.p
