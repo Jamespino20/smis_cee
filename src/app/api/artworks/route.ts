@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { put } from "@vercel/blob";
+
+export const runtime = "nodejs";
 
 export async function GET() {
   try {
@@ -17,21 +20,54 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { title, artistName, imageUrl, description } = body;
+    const formData = await request.formData();
+    const title = formData.get("title") as string;
+    const artistName = formData.get("artistName") as string;
+    const description = formData.get("description") as string | null;
+    const file = formData.get("file") as File | null;
 
-    if (!title?.trim() || !artistName?.trim() || !imageUrl?.trim()) {
+    if (!title?.trim() || !artistName?.trim()) {
       return NextResponse.json(
-        { error: "Title, artist name, and image URL are required" },
+        { error: "Title and artist name are required" },
         { status: 400 }
       );
     }
+
+    if (!file || file.size === 0) {
+      return NextResponse.json(
+        { error: "An image file is required" },
+        { status: 400 }
+      );
+    }
+
+    if (file.size > 30 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: "File size must be under 30MB" },
+        { status: 400 }
+      );
+    }
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      return NextResponse.json(
+        { error: "Only JPEG, PNG, GIF, and WebP images are allowed" },
+        { status: 400 }
+      );
+    }
+
+    const ext = file.name.split(".").pop() || "jpg";
+    const filename = `artworks/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+    const blob = await put(filename, file, {
+      access: "public",
+      contentType: file.type,
+    });
 
     const artwork = await prisma.artwork.create({
       data: {
         title: title.trim(),
         artistName: artistName.trim(),
-        imageUrl: imageUrl.trim(),
+        imageUrl: blob.url,
         description: description?.trim() || null,
       },
     });
@@ -39,7 +75,7 @@ export async function POST(request: Request) {
     return NextResponse.json(artwork, { status: 201 });
   } catch {
     return NextResponse.json(
-      { error: "Failed to create artwork" },
+      { error: "Failed to upload artwork" },
       { status: 500 }
     );
   }

@@ -21,10 +21,13 @@ export default function ArtworkGallery() {
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [artistName, setArtistName] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch("/api/artworks")
@@ -38,21 +41,50 @@ export default function ArtworkGallery() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0];
+    if (!selected) return;
+
+    if (selected.size > 30 * 1024 * 1024) {
+      setError("File must be under 30MB");
+      return;
+    }
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(selected.type)) {
+      setError("Only JPEG, PNG, GIF, and WebP images are allowed");
+      return;
+    }
+
+    setError(null);
+    setFile(selected);
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setPreview(ev.target?.result as string);
+    };
+    reader.readAsDataURL(selected);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !artistName.trim() || !imageUrl.trim() || submitting) return;
+    if (!title.trim() || !artistName.trim() || !file || submitting) return;
 
     setSubmitting(true);
+    setError(null);
+
     try {
+      const formData = new FormData();
+      formData.append("title", title.trim());
+      formData.append("artistName", artistName.trim());
+      formData.append("file", file);
+      if (description.trim()) {
+        formData.append("description", description.trim());
+      }
+
       const res = await fetch("/api/artworks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: title.trim(),
-          artistName: artistName.trim(),
-          imageUrl: imageUrl.trim(),
-          description: description.trim() || null,
-        }),
+        body: formData,
       });
 
       if (res.ok) {
@@ -60,18 +92,29 @@ export default function ArtworkGallery() {
         setArtworks((prev) => [newArtwork, ...prev]);
         setTitle("");
         setArtistName("");
-        setImageUrl("");
+        setFile(null);
+        setPreview(null);
         setDescription("");
         setSubmitted(true);
         setTimeout(() => {
           setShowForm(false);
           setSubmitted(false);
         }, 2000);
+      } else {
+        const data = await res.json();
+        setError(data.error || "Failed to upload artwork");
       }
     } catch {
+      setError("Failed to upload artwork");
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   return (
@@ -130,18 +173,54 @@ export default function ArtworkGallery() {
                     />
                   </div>
                 </div>
+
                 <div>
                   <label className="font-serif text-cream/60 text-sm mb-1 block">
-                    Image URL
+                    Image File (max 30MB)
                   </label>
                   <input
-                    type="url"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="https://example.com/artwork.png"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 font-serif text-cream placeholder:text-cream/30 focus:outline-none focus:border-sunset-gold/50 transition-colors text-base"
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={handleFileChange}
+                    className="hidden"
                   />
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full bg-white/5 border border-dashed border-white/20 rounded-lg px-4 py-8 font-serif text-cream text-center cursor-pointer hover:border-sunset-gold/50 hover:bg-white/5 transition-all"
+                  >
+                    {preview && file ? (
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="relative w-32 h-32 rounded-lg overflow-hidden">
+                          <Image
+                            src={preview}
+                            alt="Preview"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="text-sm">
+                          <p className="text-cream/80">{file.name}</p>
+                          <p className="text-cream/40 text-xs">{formatFileSize(file.size)}</p>
+                        </div>
+                        <p className="text-sunset-gold text-xs">Click to change</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-cream/40">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                        </svg>
+                        <p className="text-cream/60 text-sm">
+                          Click to upload an image
+                        </p>
+                        <p className="text-cream/30 text-xs">
+                          JPEG, PNG, GIF, or WebP — up to 30MB
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
+
                 <div>
                   <label className="font-serif text-cream/60 text-sm mb-1 block">
                     Description (optional)
@@ -154,14 +233,19 @@ export default function ArtworkGallery() {
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 font-serif text-cream placeholder:text-cream/30 focus:outline-none focus:border-sunset-gold/50 transition-colors resize-none text-base"
                   />
                 </div>
+
+                {error && (
+                  <p className="font-serif text-red-400 text-sm">{error}</p>
+                )}
+
                 <motion.button
                   type="submit"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  disabled={submitting}
+                  disabled={submitting || !file}
                   className="w-full bg-gradient-to-r from-vine-green/80 to-sakura-pink/80 text-twilight-deep font-display text-sm tracking-widest uppercase py-3 rounded-lg hover:from-vine-green hover:to-sakura-pink transition-all disabled:opacity-50"
                 >
-                  {submitting ? "Submitting..." : "Submit Artwork"}
+                  {submitting ? "Uploading..." : "Submit Artwork"}
                 </motion.button>
               </form>
             ) : (
