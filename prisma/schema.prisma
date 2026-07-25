@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model GuestbookEntry {
+  id        String   @id @default(cuid())
+  name      String
+  message   String
+  createdAt DateTime @default(now())
+
+  @@map("guestbook_entries")
+}
+
+model Artwork {
+  id          String   @id @default(cuid())
+  title       String
+  artistName  String
+  imageUrl    String
+  description String?
+  createdAt   DateTime @default(now())
+
+  @@map("artworks")
+}

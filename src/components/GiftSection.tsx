@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import ShareableCard from "./ShareableCard";
 import Guestbook from "./Guestbook";
+import ArtworkGallery from "./ArtworkGallery";
 
 export default function GiftSection() {
   return (
@@ -50,8 +51,22 @@ export default function GiftSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.2 }}
+          className="mb-16 sm:mb-24"
         >
           <Guestbook />
+        </motion.div>
+
+        {/* Divider */}
+        <div className="w-px h-16 sm:h-20 bg-gradient-to-b from-transparent via-vine-green/30 to-transparent mx-auto mb-16 sm:mb-24" />
+
+        {/* Artwork Gallery */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+        >
+          <ArtworkGallery />
         </motion.div>
 
         {/* Footer */}

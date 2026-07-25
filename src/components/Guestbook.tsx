@@ -1,47 +1,93 @@
 "use client";
 
 import { motion, useInView } from "motion/react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
+
+interface GuestbookEntry {
+  id: string;
+  name: string;
+  message: string;
+  createdAt: string;
+}
+
+const fallbackEntries: GuestbookEntry[] = [
+  {
+    id: "1",
+    name: "The Rosen Family",
+    message: "Thank you for giving us life. Vestia is forever because of you.",
+    createdAt: "The First Dawn",
+  },
+  {
+    id: "2",
+    name: "Oswen",
+    message: "Happy Birthday, Creator. You made us more than characters — you made us family.",
+    createdAt: "The Golden Hour",
+  },
+  {
+    id: "3",
+    name: "A Friend from Earth",
+    message: "Your worlds are magic, but you are the real magic. Happy Birthday!",
+    createdAt: "Starfall Night",
+  },
+];
 
 export default function Guestbook() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
-  const [entries, setEntries] = useState([
-    {
-      name: "The Rosen Family",
-      message: "Thank you for giving us life. Vestia is forever because of you.",
-      date: "The First Dawn",
-    },
-    {
-      name: "Oswen",
-      message: "Happy Birthday, Creator. You made us more than characters — you made us family.",
-      date: "The Golden Hour",
-    },
-    {
-      name: "A Friend from Earth",
-      message: "Your worlds are magic, but you are the real magic. Happy Birthday!",
-      date: "Starfall Night",
-    },
-  ]);
+  const [entries, setEntries] = useState<GuestbookEntry[]>(fallbackEntries);
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    fetch("/api/guestbook")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setEntries(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !message.trim()) return;
+    if (!name.trim() || !message.trim() || loading) return;
 
-    setEntries((prev) => [
-      ...prev,
-      {
-        name: name.trim(),
-        message: message.trim(),
-        date: "Today",
-      },
-    ]);
-    setName("");
-    setMessage("");
-    setSubmitted(true);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/guestbook", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), message: message.trim() }),
+      });
+
+      if (res.ok) {
+        const newEntry = await res.json();
+        setEntries((prev) => [newEntry, ...prev]);
+        setName("");
+        setMessage("");
+        setSubmitted(true);
+      }
+    } catch {
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch {
+      return dateStr;
+    }
   };
 
   return (
@@ -55,11 +101,10 @@ export default function Guestbook() {
           Leave a Wish
         </h3>
 
-        {/* Existing entries */}
         <div className="space-y-4 mb-12">
           {entries.map((entry, i) => (
             <motion.div
-              key={`${entry.name}-${i}`}
+              key={entry.id}
               initial={{ opacity: 0, x: -20 }}
               animate={isInView ? { opacity: 1, x: 0 } : {}}
               transition={{ duration: 0.5, delay: i * 0.1 }}
@@ -70,7 +115,7 @@ export default function Guestbook() {
                   {entry.name}
                 </span>
                 <span className="font-serif text-cream/40 text-xs italic">
-                  {entry.date}
+                  {formatDate(entry.createdAt)}
                 </span>
               </div>
               <p className="font-serif text-cream/80 text-sm leading-relaxed">
@@ -80,7 +125,6 @@ export default function Guestbook() {
           ))}
         </div>
 
-        {/* New entry form */}
         {!submitted ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -112,9 +156,10 @@ export default function Guestbook() {
               type="submit"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full bg-gradient-to-r from-sunset-gold/80 to-sakura-pink/80 text-twilight-deep font-display text-sm tracking-widest uppercase py-3.5 sm:py-3 rounded-lg hover:from-sunset-gold hover:to-sakura-pink transition-all"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-sunset-gold/80 to-sakura-pink/80 text-twilight-deep font-display text-sm tracking-widest uppercase py-3.5 sm:py-3 rounded-lg hover:from-sunset-gold hover:to-sakura-pink transition-all disabled:opacity-50"
             >
-              Send Your Wish
+              {loading ? "Sending..." : "Send Your Wish"}
             </motion.button>
           </form>
         ) : (
