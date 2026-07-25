@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useInView } from "motion/react";
+import { motion, useInView, AnimatePresence } from "motion/react";
 import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import { put } from "@vercel/blob/client";
@@ -29,6 +29,7 @@ export default function ArtworkGallery() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -329,7 +330,10 @@ export default function ArtworkGallery() {
                         opacity,
                         zIndex: isActive ? 10 : 5 - absOffset,
                       }}
-                      onClick={() => setActiveIndex(i)}
+                      onClick={() => {
+                        if (isActive) setSelectedArtwork(artwork);
+                        else setActiveIndex(i);
+                      }}
                     >
                       <div
                         className={`bg-white/5 backdrop-blur-sm rounded-xl border overflow-hidden transition-all duration-300 ${
@@ -339,12 +343,13 @@ export default function ArtworkGallery() {
                         }`}
                         style={{ width: "280px" }}
                       >
-                        <div className="relative aspect-square overflow-hidden">
+                        <div className="relative overflow-hidden">
                           <Image
                             src={artwork.imageUrl}
                             alt={artwork.title}
-                            fill
-                            className="object-cover"
+                            width={280}
+                            height={280}
+                            className="w-full h-auto"
                             sizes="280px"
                           />
                         </div>
@@ -411,6 +416,68 @@ export default function ArtworkGallery() {
             )}
           </div>
         )}
+
+        {/* Lightbox */}
+        <AnimatePresence>
+          {selectedArtwork && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              onClick={() => setSelectedArtwork(null)}
+            >
+              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="relative max-w-4xl w-full max-h-[90vh] bg-gradient-to-br from-[#1a1a3e] to-[#0a0a1a] border border-white/15 rounded-2xl overflow-hidden shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => setSelectedArtwork(null)}
+                  className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-colors text-cream/60 hover:text-cream"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+
+                <div className="flex flex-col md:flex-row">
+                  <div className="md:w-2/3 bg-black/30 flex items-center justify-center p-4">
+                    <Image
+                      src={selectedArtwork.imageUrl}
+                      alt={selectedArtwork.title}
+                      width={800}
+                      height={600}
+                      className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                    />
+                  </div>
+                  <div className="md:w-1/3 p-6 flex flex-col justify-center">
+                    <h3 className="font-display text-2xl text-sunset-gold mb-2">
+                      {selectedArtwork.title}
+                    </h3>
+                    <p className="font-serif text-cream/60 text-sm mb-4">
+                      by {selectedArtwork.artistName}
+                    </p>
+                    {selectedArtwork.description && (
+                      <p className="font-serif text-cream/50 text-sm italic leading-relaxed">
+                        {selectedArtwork.description}
+                      </p>
+                    )}
+                    <div className="mt-6 pt-4 border-t border-white/10">
+                      <p className="font-serif text-cream/30 text-xs">
+                        Click anywhere outside to close
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );
