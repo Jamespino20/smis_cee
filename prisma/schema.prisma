@@ -11,6 +11,7 @@ model GuestbookEntry {
   id        String   @id @default(cuid())
   name      String
   message   String
+  color     String   @default("gold")
   createdAt DateTime @default(now())
 
   @@map("guestbook_entries")

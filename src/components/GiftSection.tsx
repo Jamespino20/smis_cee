@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react";
 import ShareableCard from "./ShareableCard";
-import Guestbook from "./Guestbook";
+import ConstellationGallery from "./ConstellationGallery";
 import ArtworkGallery from "./ArtworkGallery";
 
 export default function GiftSection() {
@@ -53,7 +53,7 @@ export default function GiftSection() {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="mb-16 sm:mb-24"
         >
-          <Guestbook />
+          <ConstellationGallery />
         </motion.div>
 
         {/* Divider */}

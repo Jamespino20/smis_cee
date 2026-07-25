@@ -18,7 +18,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, message } = body;
+    const { name, message, color } = body;
 
     if (!name?.trim() || !message?.trim()) {
       return NextResponse.json(
@@ -27,10 +27,14 @@ export async function POST(request: Request) {
       );
     }
 
+    const validColors = ["hope", "celebration", "affection", "growth", "dreams"];
+    const starColor = validColors.includes(color) ? color : "gold";
+
     const entry = await prisma.guestbookEntry.create({
       data: {
         name: name.trim(),
         message: message.trim(),
+        color: starColor,
       },
     });
 

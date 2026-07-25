@@ -67,18 +67,26 @@
   font-display: swap;
 }
 
+:root {
+  --vj-bg: #0a0a1a;
+  --vj-text: #f5f0e8;
+  --vj-accent: #6b4c9a;
+  --vj-glow: rgba(107,76,154,0.3);
+}
+
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background-color: var(--color-lake-deep);
-  color: var(--color-cream);
+  background-color: var(--vj-bg);
+  color: var(--vj-text);
   font-family: var(--font-body);
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  transition: background-color 0.8s ease, color 0.8s ease;
 }
 
 img {
