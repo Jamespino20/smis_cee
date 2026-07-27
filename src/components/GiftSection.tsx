@@ -40,6 +40,17 @@ export default function GiftSection() {
           className="mb-16 sm:mb-24"
         >
           <ShareableCard />
+
+          {/* Subtle hint about the artifact code */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 1.5 }}
+            className="text-center mt-6 font-serif text-cream/20 text-xs italic"
+          >
+            Some Vestian artifacts are sealed. A code may be required to open them.
+          </motion.p>
         </motion.div>
 
         {/* Divider */}
