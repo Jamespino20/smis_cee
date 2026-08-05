@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getGeoFromRequest } from "@/lib/geolocation";
 
 export async function GET() {
   try {
@@ -30,11 +31,14 @@ export async function POST(request: Request) {
     const validColors = ["hope", "celebration", "affection", "growth", "dreams"];
     const starColor = validColors.includes(color) ? color : "gold";
 
+    const geo = await getGeoFromRequest(request);
+
     const entry = await prisma.guestbookEntry.create({
       data: {
         name: name.trim(),
         message: message.trim(),
         color: starColor,
+        ...geo,
       },
     });
 

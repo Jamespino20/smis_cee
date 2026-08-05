@@ -8,11 +8,15 @@ datasource db {
 }
 
 model GuestbookEntry {
-  id        String   @id @default(cuid())
-  name      String
-  message   String
-  color     String   @default("gold")
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  name       String
+  message    String
+  color      String   @default("gold")
+  createdAt  DateTime @default(now())
+  ipAddress  String?
+  location   String?
+  latitude   Float?
+  longitude  Float?
 
   @@map("guestbook_entries")
 }
@@ -24,6 +28,10 @@ model Artwork {
   imageUrl    String
   description String?
   createdAt   DateTime @default(now())
+  ipAddress   String?
+  location    String?
+  latitude    Float?
+  longitude   Float?
 
   @@map("artworks")
 }

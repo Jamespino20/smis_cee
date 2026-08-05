@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getGeoFromRequest } from "@/lib/geolocation";
 
 export const runtime = "nodejs";
 
@@ -36,12 +37,15 @@ export async function POST(request: Request) {
       );
     }
 
+    const geo = await getGeoFromRequest(request);
+
     const artwork = await prisma.artwork.create({
       data: {
         title: title.trim(),
         artistName: artistName.trim(),
         imageUrl,
         description: description?.trim() || null,
+        ...geo,
       },
     });
 
